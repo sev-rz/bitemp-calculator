@@ -1,0 +1,278 @@
+<style>
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 16px}
+.card-primary{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px 20px}
+.section-label{font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px}
+.metric-label{font-size:12px;color:var(--color-text-secondary);margin:0 0 2px}
+.metric-val{font-size:20px;font-weight:500;color:var(--color-text-primary);margin:0}
+.metric-unit{font-size:11px;color:var(--color-text-tertiary)}
+.warn{color:var(--color-text-danger)}
+.ok{color:var(--color-text-success)}
+.slider-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.slider-row label{font-size:13px;color:var(--color-text-secondary);min-width:150px}
+.slider-row input[type=range]{flex:1}
+.slider-row span{font-size:13px;font-weight:500;min-width:56px;text-align:right;color:var(--color-text-primary)}
+.mode-btn{padding:6px 18px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:transparent;color:var(--color-text-secondary);cursor:pointer;font-size:13px}
+.mode-btn.active{background:var(--color-background-info);color:var(--color-text-info);border-color:var(--color-border-info)}
+.divider{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:16px 0}
+table{width:100%;font-size:12px;border-collapse:collapse}
+td{padding:5px 8px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary)}
+td:first-child{color:var(--color-text-primary);font-weight:500}
+td:last-child{text-align:right}
+</style>
+
+<div style="padding:4px 0 12px">
+
+<div class="card-primary" style="margin-bottom:14px">
+  <div class="section-label">Mode</div>
+  <div style="display:flex;gap:8px;margin-bottom:14px">
+    <button class="mode-btn active" id="btn-nmp" onclick="setMode('NMP')">NMP (warm, 37°C)</button>
+    <button class="mode-btn" id="btn-hope" onclick="setMode('HOPE')">HOPE (cold, 4°C)</button>
+  </div>
+
+  <div class="section-label">System inputs</div>
+  <div class="slider-row">
+    <label>Liver mass (g)</label>
+    <input type="range" min="1000" max="2500" step="50" value="1850" id="sl-mass" oninput="update()">
+    <span id="out-mass">1850 g</span>
+  </div>
+  <div class="slider-row">
+    <label>Run duration (hr)</label>
+    <input type="range" min="1" max="12" step="0.5" value="6" id="sl-dur" oninput="update()">
+    <span id="out-dur">6.0 hr</span>
+  </div>
+  <div class="slider-row">
+    <label>Sweep gas flow (L/min)</label>
+    <input type="range" min="0.2" max="4" step="0.1" value="2" id="sl-sweep" oninput="update()">
+    <span id="out-sweep">2.0 L/min</span>
+  </div>
+  <div class="slider-row">
+    <label>Tube diameter D (mm)</label>
+    <input type="range" min="4" max="12" step="1" value="8" id="sl-diam" oninput="update()">
+    <span id="out-diam">8 mm</span>
+  </div>
+  <div class="slider-row">
+    <label>Tube length L (m)</label>
+    <input type="range" min="0.5" max="3" step="0.1" value="1.5" id="sl-len" oninput="update()">
+    <span id="out-len">1.5 m</span>
+  </div>
+</div>
+
+<!-- FLOW + PRESSURE -->
+<div class="section-label">Flow and pressure — per branch</div>
+<div class="grid2" style="margin-bottom:14px" id="flow-cards">
+  <div class="card">
+    <p class="metric-label">PV flow rate</p>
+    <p class="metric-val" id="v-pvq">—</p>
+    <span class="metric-unit">mL/min</span>
+  </div>
+  <div class="card">
+    <p class="metric-label">HA flow rate</p>
+    <p class="metric-val" id="v-haq">—</p>
+    <span class="metric-unit">mL/min</span>
+  </div>
+  <div class="card">
+    <p class="metric-label">PV Reynolds number</p>
+    <p class="metric-val" id="v-pvRe">—</p>
+    <span class="metric-unit" id="u-pvRe">—</span>
+  </div>
+  <div class="card">
+    <p class="metric-label">HA Reynolds number</p>
+    <p class="metric-val" id="v-haRe">—</p>
+    <span class="metric-unit" id="u-haRe">—</span>
+  </div>
+  <div class="card">
+    <p class="metric-label">PV wall shear stress</p>
+    <p class="metric-val" id="v-pvShear">—</p>
+    <span class="metric-unit" id="u-pvShear">Pa</span>
+  </div>
+  <div class="card">
+    <p class="metric-label">HA wall shear stress</p>
+    <p class="metric-val" id="v-haShear">—</p>
+    <span class="metric-unit" id="u-haShear">Pa</span>
+  </div>
+  <div class="card">
+    <p class="metric-label">PV pressure drop (tube)</p>
+    <p class="metric-val" id="v-pvDP">—</p>
+    <span class="metric-unit">mmHg</span>
+  </div>
+  <div class="card">
+    <p class="metric-label">HA pressure drop (tube)</p>
+    <p class="metric-val" id="v-haDP">—</p>
+    <span class="metric-unit">mmHg</span>
+  </div>
+</div>
+
+<!-- PUMP OPERATING POINT -->
+<div class="section-label">Required pump head</div>
+<div class="grid2" style="margin-bottom:14px">
+  <div class="card">
+    <p class="metric-label">PV pump head needed</p>
+    <p class="metric-val" id="v-pvHead">—</p>
+    <span class="metric-unit">mmHg</span>
+  </div>
+  <div class="card">
+    <p class="metric-label">HA pump head needed</p>
+    <p class="metric-val" id="v-haHead">—</p>
+    <span class="metric-unit">mmHg</span>
+  </div>
+</div>
+
+<!-- OXYGEN -->
+<div class="section-label">Oxygen demand</div>
+<div class="grid3" style="margin-bottom:14px">
+  <div class="card">
+    <p class="metric-label">Hepatic VO₂</p>
+    <p class="metric-val" id="v-vo2">—</p>
+    <span class="metric-unit">mL O₂/min</span>
+  </div>
+  <div class="card">
+    <p class="metric-label">Cylinder draw rate</p>
+    <p class="metric-val" id="v-draw">—</p>
+    <span class="metric-unit">L gas/min</span>
+  </div>
+  <div class="card">
+    <p class="metric-label">Total O₂ for run</p>
+    <p class="metric-val" id="v-total">—</p>
+    <span class="metric-unit">L at STP</span>
+  </div>
+  <div class="card">
+    <p class="metric-label">K-cylinder (6900 L)</p>
+    <p class="metric-val" id="v-kcyl">—</p>
+    <span class="metric-unit">cylinders</span>
+  </div>
+  <div class="card">
+    <p class="metric-label">E-cylinder (680 L)</p>
+    <p class="metric-val" id="v-ecyl">—</p>
+    <span class="metric-unit">cylinders</span>
+  </div>
+  <div class="card">
+    <p class="metric-label">Gas blend</p>
+    <p class="metric-val" id="v-blend" style="font-size:14px">—</p>
+  </div>
+</div>
+
+<!-- OPTIMIZABLE PARAMETERS TABLE -->
+<div class="card-primary">
+  <div class="section-label">Optimizable parameters — current status</div>
+  <table>
+    <tr><td>Parameter</td><td>Current value</td><td>Target / limit</td><td>Status</td></tr>
+    <tr><td>PV Reynolds (Re)</td><td id="t-pvRe">—</td><td>&lt; 2000 (laminar)</td><td id="s-pvRe">—</td></tr>
+    <tr><td>HA Reynolds (Re)</td><td id="t-haRe">—</td><td>&lt; 2000 (laminar)</td><td id="s-haRe">—</td></tr>
+    <tr><td>PV shear stress</td><td id="t-pvSh">—</td><td>1–2 Pa</td><td id="s-pvSh">—</td></tr>
+    <tr><td>HA shear stress</td><td id="t-haSh">—</td><td>1–2 Pa</td><td id="s-haSh">—</td></tr>
+    <tr><td>PV pump head</td><td id="t-pvH">—</td><td>8–17 mmHg</td><td id="s-pvH">—</td></tr>
+    <tr><td>HA pump head</td><td id="t-haH">—</td><td>40–85 mmHg</td><td id="s-haH">—</td></tr>
+    <tr><td>O₂ cylinder (K)</td><td id="t-ky">—</td><td>≤ 1 cylinder</td><td id="s-ky">—</td></tr>
+  </table>
+</div>
+
+</div>
+
+<script>
+let MODE = 'NMP';
+function setMode(m){
+  MODE = m;
+  document.getElementById('btn-nmp').classList.toggle('active', m==='NMP');
+  document.getElementById('btn-hope').classList.toggle('active', m==='HOPE');
+  update();
+}
+
+function st(ok){ return ok ? '<span class="ok">OK</span>' : '<span class="warn">REVIEW</span>'; }
+
+function update(){
+  const mass = +document.getElementById('sl-mass').value;
+  const dur  = +document.getElementById('sl-dur').value;
+  const sweep= +document.getElementById('sl-sweep').value;
+  const D_mm = +document.getElementById('sl-diam').value;
+  const L    = +document.getElementById('sl-len').value;
+
+  document.getElementById('out-mass').textContent  = mass + ' g';
+  document.getElementById('out-dur').textContent   = dur.toFixed(1) + ' hr';
+  document.getElementById('out-sweep').textContent = sweep.toFixed(1) + ' L/min';
+  document.getElementById('out-diam').textContent  = D_mm + ' mm';
+  document.getElementById('out-len').textContent   = L.toFixed(1) + ' m';
+
+  const isNMP = MODE === 'NMP';
+  const pvRate = isNMP ? 0.75 : 0.10;
+  const haRate = isNMP ? 0.25 : 0.0;
+
+  const pvQ_mL = pvRate * mass;
+  const haQ_mL = haRate * mass;
+
+  const rho = 1050;
+  const mu  = isNMP ? 3.5e-3 : 5.0e-3;
+  const D   = D_mm * 1e-3;
+  const A   = Math.PI * D * D / 4;
+
+  function Re(Q_mL){ return 4*rho*(Q_mL/1e6/60)/(Math.PI*mu*D); }
+  function shear(Q_mL){ return 32*mu*(Q_mL/1e6/60)/(Math.PI*D*D*D); }
+  function dpL(Q_mL){ return 128*mu*(Q_mL/1e6/60)*L/(Math.PI*D*D*D*D)/133.322; }
+
+  const pvRe = Re(pvQ_mL);
+  const haRe = haQ_mL > 0 ? Re(haQ_mL) : 0;
+  const pvSh = shear(pvQ_mL);
+  const haSh = haQ_mL > 0 ? shear(haQ_mL) : 0;
+  const pvDP = dpL(pvQ_mL);
+  const haDP = haQ_mL > 0 ? dpL(haQ_mL) : 0;
+
+  const pvTargetP = isNMP ? 10 : 3;
+  const haTargetP = isNMP ? 60 : 0;
+  const pvHead = pvTargetP + pvDP;
+  const haHead = haTargetP + haDP;
+
+  document.getElementById('v-pvq').textContent   = Math.round(pvQ_mL);
+  document.getElementById('v-haq').textContent   = Math.round(haQ_mL);
+  document.getElementById('v-pvRe').textContent  = Math.round(pvRe);
+  document.getElementById('v-haRe').textContent  = haQ_mL > 0 ? Math.round(haRe) : 'N/A';
+  document.getElementById('u-pvRe').textContent  = pvRe < 2000 ? 'laminar' : 'TURBULENT';
+  document.getElementById('u-haRe').textContent  = haQ_mL > 0 ? (haRe < 2000 ? 'laminar' : 'TURBULENT') : '';
+  document.getElementById('v-pvShear').textContent = pvSh.toFixed(2);
+  document.getElementById('v-haShear').textContent = haQ_mL > 0 ? haSh.toFixed(2) : 'N/A';
+  document.getElementById('v-pvDP').textContent  = pvDP.toFixed(2);
+  document.getElementById('v-haDP').textContent  = haQ_mL > 0 ? haDP.toFixed(2) : '—';
+  document.getElementById('v-pvHead').textContent= pvHead.toFixed(1);
+  document.getElementById('v-haHead').textContent= haQ_mL > 0 ? haHead.toFixed(1) : 'N/A';
+
+  const o2Frac = isNMP ? 0.95 : 1.0;
+  const vo2 = isNMP ? 2.0 * mass / 100 : 0.5 * mass / 100;
+  const drawRate = sweep * o2Frac;
+  const totalO2  = drawRate * 60 * dur;
+  const kCyl = totalO2 / 6900;
+  const eCyl = totalO2 / 680;
+  const blend = isNMP ? '95% O₂ / 5% CO₂' : '100% O₂';
+
+  document.getElementById('v-vo2').textContent   = vo2.toFixed(1);
+  document.getElementById('v-draw').textContent  = drawRate.toFixed(2);
+  document.getElementById('v-total').textContent = Math.round(totalO2);
+  document.getElementById('v-kcyl').textContent  = kCyl.toFixed(2);
+  document.getElementById('v-ecyl').textContent  = eCyl.toFixed(1);
+  document.getElementById('v-blend').textContent = blend;
+
+  const pvReOk = pvRe < 2000;
+  const haReOk = haQ_mL === 0 || haRe < 2000;
+  const pvShOk = pvSh >= 1 && pvSh <= 2;
+  const haShOk = haQ_mL === 0 || (haSh >= 0.5 && haSh <= 2);
+  const pvHOk  = pvHead >= 5 && pvHead <= 20;
+  const haHOk  = haQ_mL === 0 || (haHead >= 40 && haHead <= 90);
+  const kyOk   = kCyl <= 1;
+
+  document.getElementById('t-pvRe').textContent = Math.round(pvRe);
+  document.getElementById('t-haRe').textContent = haQ_mL > 0 ? Math.round(haRe) : 'N/A';
+  document.getElementById('t-pvSh').textContent = pvSh.toFixed(2) + ' Pa';
+  document.getElementById('t-haSh').textContent = haQ_mL > 0 ? haSh.toFixed(2) + ' Pa' : 'N/A';
+  document.getElementById('t-pvH').textContent  = pvHead.toFixed(1) + ' mmHg';
+  document.getElementById('t-haH').textContent  = haQ_mL > 0 ? haHead.toFixed(1) + ' mmHg' : 'N/A';
+  document.getElementById('t-ky').textContent   = kCyl.toFixed(2);
+
+  document.getElementById('s-pvRe').innerHTML = st(pvReOk);
+  document.getElementById('s-haRe').innerHTML = haQ_mL > 0 ? st(haReOk) : '—';
+  document.getElementById('s-pvSh').innerHTML = st(pvShOk);
+  document.getElementById('s-haSh').innerHTML = haQ_mL > 0 ? st(haShOk) : '—';
+  document.getElementById('s-pvH').innerHTML  = st(pvHOk);
+  document.getElementById('s-haH').innerHTML  = haQ_mL > 0 ? st(haHOk) : '—';
+  document.getElementById('s-ky').innerHTML   = st(kyOk);
+}
+update();
+</script>
